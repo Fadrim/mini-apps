@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Mini App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blackjack</h1>
+        <div id="chips">Chips: 1000</div>
+        <div id="game-area">
+            <div id="dealer">
+                <h2>Dealer's Hand</h2>
+                <div id="dealer-cards" class="cards"></div>
+                <p id="dealer-score"></p>
+            </div>
+            <div id="player">
+                <h2>Your Hand</h2>
+                <div id="player-cards" class="cards"></div>
+                <p id="player-score"></p>
+            </div>
+            <div id="controls">
+                <button id="start-game">Start Game</button>
+                <button id="hit" disabled>Hit</button>
+                <button id="stand" disabled>Stand</button>
+            </div>
+        </div>
+        <div id="message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
