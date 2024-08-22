@@ -35,15 +35,13 @@
             border-radius: 10px;
             position: relative;
             cursor: pointer;
+            font-size: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .chest:before {
-            content: "Сундук";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            font-weight: bold;
+        .chest.opened {
+            cursor: default;
         }
         #chart-container {
             width: 80%;
@@ -167,7 +165,11 @@
             for (let i = 0; i < 4; i++) {
                 const chest = document.createElement('div');
                 chest.className = 'chest';
-                chest.addEventListener('click', () => openChest(i === bombIndex, chest));
+                chest.addEventListener('click', () => {
+                    if (lives > 0 && !chest.classList.contains('opened')) {
+                        openChest(i === bombIndex, chest);
+                    }
+                });
                 chestsContainer.appendChild(chest);
             }
         }
@@ -179,7 +181,9 @@
         }
 
         function openChest(isBomb, chestElement) {
+            chestElement.classList.add('opened');
             if (isBomb) {
+                chestElement.textContent = '💥';
                 chestElement.style.backgroundColor = 'red';
                 lives--;
                 updateLives();
@@ -192,10 +196,11 @@
                     setTimeout(generateChests, 1000);
                 }
             } else {
+                chestElement.textContent = '💰';
+                chestElement.style.backgroundColor = 'green';
                 level++;
                 const winAmount = Math.floor(Math.random() * 50) + 1;
                 score += winAmount;
-                chestElement.style.backgroundColor = 'green';
                 document.getElementById('status').textContent = 'Ваши фишки: ' + score;
 
                 scores.push(score);
