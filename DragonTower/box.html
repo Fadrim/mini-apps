@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра с сундуками</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+        }
+        .game-area {
+            width: 60%;
+        }
+        .chests-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+            justify-items: center;
+        }
+        .chest {
+            width: 100px;
+            height: 100px;
+            background-color: #c39c4f;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .chest:before {
+            content: "Сундук";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #chart-container {
+            width: 80%;
+            margin: 50px auto;
+        }
+        .status-bar {
+            margin-bottom: 20px;
+        }
+        .lives {
+            font-size: 18px;
+            color: red;
+        }
+        .level {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .restart-button {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .restart-button:hover {
+            background-color: #45a049;
+        }
+        .top-list {
+            width: 30%;
+            text-align: left;
+        }
+        .top-list h3 {
+            margin-bottom: 10px;
+        }
+        .top-list ol {
+            padding-left: 20px;
+        }
+        .top-list ol li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <div class="status-bar">
+                <div class="level" id="level">Уровень: 1</div>
+                <div class="lives" id="lives">Жизни: ❤️❤️❤️</div>
+            </div>
+            <h1>Выберите сундук</h1>
+            <div id="chests" class="chests-container"></div>
+            <h2 id="status">Ваши фишки: 0</h2>
+            <button class="restart-button" id="restartButton" onclick="resetGame()">Начать заново</button>
+        </div>
+        <div class="top-list">
+            <h3>Топ игроков</h3>
+            <ol id="topList"></ol>
+        </div>
+    </div>
+    <div id="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let scores = [];
+        let levels = [];
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: levels,
+                datasets: [{
+                    label: 'Сумма фишек',
+                    data: scores,
+                    borderColor: 'blue',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Уровень'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Фишки'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateLives() {
+            const livesElement = document.getElementById('lives');
+            livesElement.textContent = 'Жизни: ' + '❤️'.repeat(lives);
+        }
+
+        function updateLevel() {
+            const levelElement = document.getElementById('level');
+            levelElement.textContent = 'Уровень: ' + level;
+        }
+
+        function generateChests() {
+            const chestsContainer = document.getElementById('chests');
+            chestsContainer.innerHTML = '';
+
+            const bombIndex = Math.floor(Math.random() * 4);
+            for (let i = 0; i < 4; i++) {
+                const chest = document.createElement('div');
+                chest.className = 'chest';
+                chest.addEventListener('click', () => openChest(i === bombIndex, chest));
+                chestsContainer.appendChild(chest);
+            }
+        }
+
+        function updateChart() {
+            chart.data.labels = [...levels];
+            chart.data.datasets[0].data = [...scores];
+            chart.update();
+        }
+
+        function openChest(isBomb, chestElement) {
+            if (isBomb) {
+                chestElement.style.backgroundColor = 'red';
+                lives--;
+                updateLives();
+                if (lives === 0) {
+                    document.getElementById('status').textContent = 'Вы потеряли все жизни! Игра окончена.';
+                    saveScore(score);
+                    document.getElementById('restartButton').style.display = 'block';
+                } else {
+                    document.getElementById('status').textContent = 'Вы нашли бомбу! Осталось жизней: ' + lives;
+                    setTimeout(generateChests, 1000);
+                }
+            } else {
+                level++;
+                const winAmount = Math.floor(Math.random() * 50) + 1;
+                score += winAmount;
+                chestElement.style.backgroundColor = 'green';
+                document.getElementById('status').textContent = 'Ваши фишки: ' + score;
+
+                scores.push(score);
+                levels.push(level);
+
+                updateChart();
+                updateLevel();
+                setTimeout(generateChests, 1000);
+            }
+        }
+
+        function saveScore(score) {
+            let topScores = JSON.parse(localStorage.getItem('topScores')) || [];
+            topScores.push(score);
+            topScores.sort((a, b) => b - a);
+            topScores = topScores.slice(0, 10);
+            localStorage.setItem('topScores', JSON.stringify(topScores));
+            updateTopList();
+        }
+
+        function updateTopList() {
+            const topScores = JSON.parse(localStorage.getItem('topScores')) || [];
+            const topList = document.getElementById('topList');
+            topList.innerHTML = '';
+            topScores.forEach((score, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${score} фишек`;
+                topList.appendChild(li);
+            });
+        }
+
+        function resetGame() {
+            score = 0;
+            level = 1;
+            lives = 3;
+            scores = [];
+            levels = [];
+            updateChart();
+            updateLevel();
+            updateLives();
+            document.getElementById('status').textContent = 'Ваши фишки: 0';
+            document.getElementById('restartButton').style.display = 'none';
+            generateChests();
+        }
+
+        updateLives();
+        updateLevel();
+        updateTopList();
+        generateChests();
+    </script>
+</body>
+</html>
